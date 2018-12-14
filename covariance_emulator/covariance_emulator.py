@@ -10,7 +10,7 @@ class CovEmu(object):
     """
     Generalized emulator for covariance matrices.
     """
-    def __init__(self, parameters, covariance_matrices):
+    def __init__(self, parameters, covariance_matrices, Npc_d=1, Npc_l=1):
         parameters = np.array(parameters)
         Cs = np.array(covariance_matrices)
         #Check dimensionality
@@ -27,6 +27,8 @@ class CovEmu(object):
                                 "same dimensions.")
             continue
         #Save all attributes
+        self.Npc_d = Npc_d
+        self.Npc_l = Npc_l
         self.number_of_matrices  = len(Cs)
         self.matrix_size         = len(Cs[0])
         self.covariance_matrices = Cs
@@ -84,11 +86,13 @@ class CovEmu(object):
             self.Lprime_std = 1
         return
 
-    def create_training_data(self, Npc_d=2, Npc_l=2):
+    def create_training_data(self):
         """
         Take the broken down matrices and create 
         training data using PCA via SVD.
         """
+        Npc_d = self.Npc_d
+        Npc_l = self.Npc_l
         #Regularize the broken down data        
         self.ds  = (self.ds_raw - self.d_mean)/self.d_std
         self.lps = (self.Lprimes - self.Lprime_mean)/self.Lprime_std
@@ -102,24 +106,20 @@ class CovEmu(object):
             ws = np.sqrt(N) * u.T[:Npc]
             return ws, phis
         ws_d, phis_d = compute_ws_and_phis(self.ds, Npc_d)
-        ws_l, phis_l = compute_ws_and_phis(self.ds, Npc_l)
+        ws_l, phis_l = compute_ws_and_phis(self.lps, Npc_l)
         #Save the weights and PCs
         self.ws_d   = ws_d
         self.phis_d = phis_d
         self.ws_l   = ws_l
         self.phis_l = phis_l
-        #Save the number of PCs
-        self.Npc_d  = Npc_d
-        self.Npc_l  = Npc_l
         return
 
     def build_emulator(self, kernel_d=None, kernel_lp=None):
         metric_guess = np.std(self.parameters, 0)
-        Npars = self.Npars
         if kernel_d is None:
-            kernel_d  = 1.*ExpSquaredKernel(metric_guess, ndim=Npars)
+            kernel_d  = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
         if kernel_lp is None:
-            kernel_lp = 1.*ExpSquaredKernel(metric_guess, ndim=Npars)
+            kernel_lp = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
 
         gplist_d = []
         #Create all GPs for d; one for each principle component
@@ -183,7 +183,7 @@ class CovEmu(object):
         if not self.trained:
             raise Exception("Need to train the emulator first.")
 
-        params = np.array(params)
+        params = np.atleast_1d(params)
         if params.ndim > 1:
             raise Exception("'params' must be a single point in parameter "+
                             "space; a 1D array at most.")
@@ -192,14 +192,17 @@ class CovEmu(object):
                             "parameters.")
         #Loop over d GPs and predict weights
         wp_d = np.array([gp.predict(ws, params)[0] for ws,gp in zip(self.ws_d, self.gplist_d)])
-        wp_l = np.array([gp.predict(ws, params)[0] for ws,gp in zip(self.ws_d, self.gplist_l)])
+        wp_l = np.array([gp.predict(ws, params)[0] for ws,gp in zip(self.ws_l, self.gplist_l)])
         #Multiply by the PCs to get predicted ds and lprimes
         d_pred  = wp_d[0]*self.phis_d[0]
         lp_pred = wp_l[0]*self.phis_l[0]
-        for i in range(1,self,Npc_d):
+        
+        for i in range(1,self.Npc_d):
             d_pred  += wp_d[i]*self.phis_d[i]
-        for i in range(1,self,Npc_l):
+
+        for i in range(1,self.Npc_l):
             lp_pred += wp_l[i]*self.phis_l[i]
+
         #Multiply on the stddev and add on the mean
         d_pred_raw  = d_pred *self.d_std + self.d_mean
         Lprime_pred = lp_pred*self.Lprime_std + self.Lprime_mean
