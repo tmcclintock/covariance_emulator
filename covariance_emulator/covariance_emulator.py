@@ -28,7 +28,7 @@ class CovEmu(object):
         self.number_of_matrices  = len(Cs)
         self.matrix_size         = len(Cs[0])
         self.covariance_matrices = Cs
-        self.parametrs           = parameters
+        self.parameters           = parameters
         if parameters.ndim == 2:
             self.Npars = len(self.parameters[0])
         else:
@@ -106,3 +106,4 @@ class CovEmu(object):
         if kernel_lp is None:
             kernel_lp = 1.*ExpSquaredKernel(metric_guess, ndim=Npars)
         #Took a break here
+        return
