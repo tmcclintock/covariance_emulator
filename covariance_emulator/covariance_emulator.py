@@ -40,6 +40,7 @@ class CovEmu(object):
         self.breakdown_matrices()
         self.create_training_data()
         self.build_emulator()
+        self.train_emulator()
 
     @classmethod
     def from_Ds_Lprimes(cls, Ds, Lprimes):
@@ -107,6 +108,7 @@ class CovEmu(object):
         self.phis_d = phis_d
         self.ws_l   = ws_l
         self.phis_l = phis_l
+        #Save the number of PCs
         self.Npc_d  = Npc_d
         self.Npc_l  = Npc_l
         return
@@ -122,22 +124,57 @@ class CovEmu(object):
         gplist_d = []
         #Create all GPs for d; one for each principle component
         for i in range(self.Npc_d):
-            y = self.ws_d[i,:]
+            ws = self.ws_d[i,:]
             kd = copy.deepcopy(kernel_d)
-            gp = george.GP(kernel=kd, fit_kernel=True)
+            gp = george.GP(kernel=kd, fit_kernel=True, mean=np.mean(ws))
             gp.compute(self.parameters)
             gplist_d.append(gp)
             continue
-
         gplist_l = []
         #Create all GPs for lprime; one for each principle component
         for i in range(self.Npc_l):
-            y = self.ws_l[i,:]
+            ws = self.ws_l[i,:]
             kl = copy.deepcopy(kernel_lp)
-            gp = george.GP(kernel=kl, fit_kernel=True)
+            gp = george.GP(kernel=kl, fit_kernel=True, mean=np.mean(ws))
             gp.compute(self.parameters)
             gplist_l.append(gp)
             continue
-        self.gplist_d = gplist_d
-        self.gplist_l = gplist_l
+        self.gplist_d  = gplist_d
+        self.gplist_l  = gplist_l
+        self.GPs_built = True
+        return
+
+    def train_emulator(self):
+        if not self.GPs_built:
+            raise Exception("Need to build before training.")
+        
+        #Train the GPs for d
+        for i, gp in enumerate(self.gplist_d):
+            ws = self.ws_d[i,:]
+            def nll(p):
+                gp.set_parameter_vector(p)
+                ll = gp.log_likelihood(ws, quiet=True)
+                return -ll if np.isfinite(ll) else 1e25
+            def grad_nll(p):
+                gp.set_parameter_vector(p)
+                return -gp.grad_log_likelihood(ws, quiet=True)
+            p0 = gp.get_parameter_vector()
+            result = op.minimize(nll, p0, jac=grad_nll)
+            gp.set_parameter_vector(result.x)
+            continue
+        #Train the GPs for lprime
+        for i, gp in enumerate(self.gplist_l):
+            ws = self.ws_l[i,:]
+            def nll(p):
+                gp.set_parameter_vector(p)
+                ll = gp.log_likelihood(ws, quiet=True)
+                return -ll if np.isfinite(ll) else 1e25
+            def grad_nll(p):
+                gp.set_parameter_vector(p)
+                return -gp.grad_log_likelihood(ws, quiet=True)
+            p0 = gp.get_parameter_vector()
+            result = op.minimize(nll, p0, jac=grad_nll)
+            gp.set_parameter_vector(result.x)
+            continue
+        self.trained = True
         return
