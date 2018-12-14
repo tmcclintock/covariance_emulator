@@ -34,6 +34,10 @@ class CovEmu(object):
         else:
             self.Npars = 1 #1 number per covariance matrix
 
+        #Call methods that start to build the emulator
+        self.breakdown_matrices()
+        self.create_training_data()
+
     @classmethod
     def from_Ds_Lprimes(cls, Ds, Lprimes):
         """
@@ -62,12 +66,18 @@ class CovEmu(object):
             continue
         #Save the broken down data
         self.Ds = Ds
+        self.ds_raw = np.log(Ds)
         self.Lprimes = Lprimes
         #Compute their first statistical moments
-        self.D_mean = np.mean(Ds)
-        self.D_std  = np.std(Ds)
+        self.d_mean = np.mean(self.ds_raw)
+        self.d_std  = np.std(self.ds_raw)
         self.Lprime_mean = np.mean(Lprimes)
         self.Lprime_std  = np.std(Lprimes)
+        #If any standard deviations are 0, set them to 1
+        if self.d_std == 0:
+            self.d_std = 1
+        if self.Lprime_std == 0:
+            self.Lprime_std = 1
         return
 
     def create_training_data(self, Npc_d=6, Npc_l=6):
@@ -75,8 +85,8 @@ class CovEmu(object):
         Take the broken down matrices and create 
         training data using PCA via SVD.
         """
-        #Regularize the broken down data
-        self.ds  = (self.Ds - self.D_mean)/self.D_std
+        #Regularize the broken down data        
+        self.ds  = (self.ds_raw - self.d_mean)/self.d_std
         self.lps = (self.Lprimes - self.Lprime_mean)/self.Lprime_std
         #Perform PCA to create weights and principle components
         def compute_ws_and_phis(A, Npc):
