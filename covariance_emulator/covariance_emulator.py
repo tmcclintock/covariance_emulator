@@ -84,7 +84,7 @@ class CovEmu(object):
             self.Lprime_std = 1
         return
 
-    def create_training_data(self, Npc_d=1, Npc_l=1):
+    def create_training_data(self, Npc_d=2, Npc_l=2):
         """
         Take the broken down matrices and create 
         training data using PCA via SVD.
@@ -178,3 +178,32 @@ class CovEmu(object):
             continue
         self.trained = True
         return
+
+    def predict(self, params):
+        if not self.trained:
+            raise Exception("Need to train the emulator first.")
+
+        params = np.array(params)
+        if params.ndim > 1:
+            raise Exception("'params' must be a single point in parameter "+
+                            "space; a 1D array at most.")
+        if len(params) != self.Npars:
+            raise Exception("length of 'params' does not match training "+\
+                            "parameters.")
+        #Loop over d GPs and predict weights
+        wp_d = np.array([gp.predict(ws, params)[0] for ws,gp in zip(self.ws_d, self.gplist_d)])
+        wp_l = np.array([gp.predict(ws, params)[0] for ws,gp in zip(self.ws_d, self.gplist_l)])
+        #Multiply by the PCs to get predicted ds and lprimes
+        d_pred  = wp_d[0]*self.phis_d[0]
+        lp_pred = wp_l[0]*self.phis_l[0]
+        for i in range(1,self,Npc_d):
+            d_pred  += wp_d[i]*self.phis_d[i]
+        for i in range(1,self,Npc_l):
+            lp_pred += wp_l[i]*self.phis_l[i]
+        #Multiply on the stddev and add on the mean
+        d_pred_raw  = d_pred *self.d_std + self.d_mean
+        Lprime_pred = lp_pred*self.Lprime_std + self.Lprime_mean
+        D_pred = np.exp(d_pred_raw)
+        #Reconstruct the covariance through the breakdown tool
+        breakdown_predicted = cb.breakdown.from_D_Lprime(D_pred, Lprime_pred)
+        return breakdown_predicted.C
