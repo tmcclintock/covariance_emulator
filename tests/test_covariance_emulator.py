@@ -11,7 +11,8 @@ def test_emulator_builds():
 def test_emulator_attributes():
     attrs = ["number_of_matrices", "matrix_size", "covariance_matrices",
              "parameters", "Npars","Ds","Lprimes","d_mean","d_std",
-             "Lprime_mean","Lprime_std"]#, "ds", "lps"]
+             "Lprime_mean","Lprime_std", "ds", "lps","ws_d","ws_l","phis_d",
+             "phis_l","Npc_d","Npc_l","gplist_d","gplist_l"]
     params = np.arange(1,10)
     Cs = np.array([p*np.identity(2) for p in params])
     Emu = ce.CovEmu(params, Cs)
