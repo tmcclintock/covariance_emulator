@@ -1,8 +1,10 @@
 import numpy as np
 import george as gg
 import covariance_breakdown as cb
+import george
 from george.kernels import *
 import scipy.optimize as op
+import copy
 
 class CovEmu(object):
     """
@@ -37,6 +39,7 @@ class CovEmu(object):
         #Call methods that start to build the emulator
         self.breakdown_matrices()
         self.create_training_data()
+        self.build_emulator()
 
     @classmethod
     def from_Ds_Lprimes(cls, Ds, Lprimes):
@@ -80,7 +83,7 @@ class CovEmu(object):
             self.Lprime_std = 1
         return
 
-    def create_training_data(self, Npc_d=6, Npc_l=6):
+    def create_training_data(self, Npc_d=1, Npc_l=1):
         """
         Take the broken down matrices and create 
         training data using PCA via SVD.
@@ -104,16 +107,37 @@ class CovEmu(object):
         self.phis_d = phis_d
         self.ws_l   = ws_l
         self.phis_l = phis_l
+        self.Npc_d  = Npc_d
+        self.Npc_l  = Npc_l
         return
 
-    def train_GPs(self, kernel_d=None, kernel_lp=None):
-        gplist_d = []
-        gplist_l = []
-        Npars = self.Npars
+    def build_emulator(self, kernel_d=None, kernel_lp=None):
         metric_guess = np.std(self.parameters, 0)
+        Npars = self.Npars
         if kernel_d is None:
             kernel_d  = 1.*ExpSquaredKernel(metric_guess, ndim=Npars)
         if kernel_lp is None:
             kernel_lp = 1.*ExpSquaredKernel(metric_guess, ndim=Npars)
-        #Took a break here
+
+        gplist_d = []
+        #Create all GPs for d; one for each principle component
+        for i in range(self.Npc_d):
+            y = self.ws_d[i,:]
+            kd = copy.deepcopy(kernel_d)
+            gp = george.GP(kernel=kd, fit_kernel=True)
+            gp.compute(self.parameters)
+            gplist_d.append(gp)
+            continue
+
+        gplist_l = []
+        #Create all GPs for lprime; one for each principle component
+        for i in range(self.Npc_l):
+            y = self.ws_l[i,:]
+            kl = copy.deepcopy(kernel_lp)
+            gp = george.GP(kernel=kl, fit_kernel=True)
+            gp.compute(self.parameters)
+            gplist_l.append(gp)
+            continue
+        self.gplist_d = gplist_d
+        self.gplist_l = gplist_l
         return
