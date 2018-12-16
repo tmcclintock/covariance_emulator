@@ -10,7 +10,7 @@ class CovEmu(object):
     """
     Generalized emulator for covariance matrices.
     """
-    def __init__(self, parameters, covariance_matrices, Npc_d=1, Npc_l=1):
+    def __init__(self, parameters, covariance_matrices, NPC_D=1, NPC_L=1):
         parameters = np.array(parameters)
         Cs = np.array(covariance_matrices)
         #Check dimensionality
@@ -27,8 +27,8 @@ class CovEmu(object):
                                 "same dimensions.")
             continue
         #Save all attributes
-        self.Npc_d = Npc_d
-        self.Npc_l = Npc_l
+        self.NPC_D = NPC_D
+        self.NPC_L = NPC_L
         self.number_of_matrices  = len(Cs)
         self.matrix_size         = len(Cs[0])
         self.covariance_matrices = Cs
@@ -91,8 +91,8 @@ class CovEmu(object):
         Take the broken down matrices and create 
         training data using PCA via SVD.
         """
-        Npc_d = self.Npc_d
-        Npc_l = self.Npc_l
+        NPC_D = self.NPC_D
+        NPC_L = self.NPC_L
         #Regularize the broken down data        
         self.ds  = (self.ds_raw - self.d_mean)/self.d_std
         self.lps = (self.Lprimes - self.Lprime_mean)/self.Lprime_std
@@ -105,8 +105,8 @@ class CovEmu(object):
             phis = P.T[:Npc]
             ws = np.sqrt(N) * u.T[:Npc]
             return ws, phis
-        ws_d, phis_d = compute_ws_and_phis(self.ds, Npc_d)
-        ws_l, phis_l = compute_ws_and_phis(self.lps, Npc_l)
+        ws_d, phis_d = compute_ws_and_phis(self.ds, NPC_D)
+        ws_l, phis_l = compute_ws_and_phis(self.lps, NPC_L)
         #Save the weights and PCs
         self.ws_d   = ws_d
         self.phis_d = phis_d
@@ -123,7 +123,7 @@ class CovEmu(object):
 
         gplist_d = []
         #Create all GPs for d; one for each principle component
-        for i in range(self.Npc_d):
+        for i in range(self.NPC_D):
             ws = self.ws_d[i,:]
             kd = copy.deepcopy(kernel_d)
             gp = george.GP(kernel=kd, fit_kernel=True, mean=np.mean(ws))
@@ -132,7 +132,7 @@ class CovEmu(object):
             continue
         gplist_l = []
         #Create all GPs for lprime; one for each principle component
-        for i in range(self.Npc_l):
+        for i in range(self.NPC_L):
             ws = self.ws_l[i,:]
             kl = copy.deepcopy(kernel_lp)
             gp = george.GP(kernel=kl, fit_kernel=True, mean=np.mean(ws))
@@ -197,10 +197,10 @@ class CovEmu(object):
         d_pred  = wp_d[0]*self.phis_d[0]
         lp_pred = wp_l[0]*self.phis_l[0]
         
-        for i in range(1,self.Npc_d):
+        for i in range(1,self.NPC_D):
             d_pred  += wp_d[i]*self.phis_d[i]
 
-        for i in range(1,self.Npc_l):
+        for i in range(1,self.NPC_L):
             lp_pred += wp_l[i]*self.phis_l[i]
 
         #Multiply on the stddev and add on the mean
