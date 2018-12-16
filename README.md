@@ -17,3 +17,19 @@ You should then run the unit tests with
 python setup.py test
 ```
 If any fail, please copy/paste their output into an issue.
+
+## Usage
+
+```python
+#Assume a set of covariance matrices exist in a list called 'Cs'
+#located at a set of domain points (x values) called 'parameters'
+
+import covariance_emulator as ce
+
+#Create the emulator
+Emu = ce.CovEmu(parameters, Cs)
+
+#Assume you have a domain point you want to predict at
+#called 'test_parameter'
+C_predicted = Emu.predict(test_parameter)
+```
