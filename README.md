@@ -2,7 +2,7 @@
 
 The `covariance_emulator` is a tool to predict covariance matrices using Gaussian process regression given a set of training matrices at a specified set of domain locations (i.e. "x values"). This is very helpful in cosmology, since the covariance matrix depends directly on the cosmological parameters being estimated in the likelihood we write down.
 
-This tool is general, in that it can be used to construct emulators for any set of covariance matrix (in fact, any set of matrices that can be LDL decomposed).
+This tool is general, in that it can be used to construct emulators for any set of covariance matrix (in fact, any set of matrices that can be LDL decomposed). The inspiration for this tool is [Morrison & Schneider (2013)](https://arxiv.org/abs/1304.7789), with this tool offering more flexibility than their approach.
 
 ## Installation
 
