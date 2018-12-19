@@ -1,10 +1,10 @@
+import copy
 import numpy as np
 import covariance_breakdown as cb
 import george
 from george.kernels import ExpSquaredKernel, Matern52Kernel, \
     ExpKernel, RationalQuadraticKernel, Matern32Kernel
 import scipy.optimize as op
-import copy
 
 #Assert statements to guarantee the linter doesn't complain
 assert ExpSquaredKernel
@@ -28,7 +28,7 @@ class CovEmu(object):
             raise Exception("'parameters' must be either a 1D or 2D array.")
         if Cs.ndim != 3:
             raise Exception("Must supply a list of 2D covariance matrices.")
-        for i in range(0,len(Cs)-1):
+        for i in range(0, len(Cs)-1):
             if Cs[i].shape != Cs[i+1].shape:
                 raise Exception("All covariances must have the "+\
                                 "same dimensions.")
@@ -36,10 +36,10 @@ class CovEmu(object):
         #Save all attributes
         self.NPC_D = NPC_D
         self.NPC_L = NPC_L
-        self.number_of_matrices  = len(Cs)
-        self.matrix_size         = len(Cs[0])
+        self.number_of_matrices = len(Cs)
+        self.matrix_size = len(Cs[0])
         self.covariance_matrices = Cs
-        self.parameters           = parameters
+        self.parameters = parameters
         if parameters.ndim == 2:
             self.Npars = len(self.parameters[0])
         else:
@@ -65,16 +65,16 @@ class CovEmu(object):
         :returns:
             None
         """
-        Cs  = self.covariance_matrices
-        ND  = self.matrix_size
-        Nc  = self.number_of_matrices
+        Cs = self.covariance_matrices
+        ND = self.matrix_size
+        Nc = self.number_of_matrices
         NLp = int(ND*(ND-1)/2)
-        Ds  = np.zeros((Nc, ND))
-        Lprimes = np.zeros((Nc,NLp))
+        Ds = np.zeros((Nc, ND))
+        Lprimes = np.zeros((Nc, NLp))
         #Loop over matrices and break them down
         for i in range(Nc):
-            b          = cb.breakdown(Cs[i])
-            Ds[i]      = b.D
+            b = cb.breakdown(Cs[i])
+            Ds[i] = b.D
             Lprimes[i] = b.Lprime
             continue
         #Save the broken down data
@@ -83,9 +83,9 @@ class CovEmu(object):
         self.Lprimes = Lprimes
         #Compute their first statistical moments
         self.d_mean = np.mean(self.ds_raw)
-        self.d_std  = np.std(self.ds_raw)
+        self.d_std = np.std(self.ds_raw)
         self.Lprime_mean = np.mean(Lprimes)
-        self.Lprime_std  = np.std(Lprimes)
+        self.Lprime_std = np.std(Lprimes)
         #If any standard deviations are 0, set them to 1
         if self.d_std == 0:
             self.d_std = 1
@@ -95,17 +95,17 @@ class CovEmu(object):
 
     def create_training_data(self):
         """
-        Take the broken down matrices and create 
+        Take the broken down matrices and create
         training data using PCA via SVD.
         """
         NPC_D = self.NPC_D
         NPC_L = self.NPC_L
-        #Regularize the broken down data        
-        self.ds  = (self.ds_raw - self.d_mean)/self.d_std
+        #Regularize the broken down data
+        self.ds = (self.ds_raw - self.d_mean)/self.d_std
         self.lps = (self.Lprimes - self.Lprime_mean)/self.Lprime_std
         #Perform PCA to create weights and principle components
         def compute_ws_and_phis(A, Npc):
-            u,s,v = np.linalg.svd(A, 0) #Do the PCA
+            u, s, v = np.linalg.svd(A, 0) #Do the PCA
             s = np.diag(s)
             N = len(s)
             P = np.dot(v.T, s)/np.sqrt(N)
@@ -115,23 +115,23 @@ class CovEmu(object):
         ws_d, phis_d = compute_ws_and_phis(self.ds, NPC_D)
         ws_l, phis_l = compute_ws_and_phis(self.lps, NPC_L)
         #Save the weights and PCs
-        self.ws_d   = ws_d
+        self.ws_d = ws_d
         self.phis_d = phis_d
-        self.ws_l   = ws_l
+        self.ws_l = ws_l
         self.phis_l = phis_l
         return
 
     def build_emulator(self, kernel_d=None, kernel_lp=None):
         metric_guess = np.std(self.parameters, 0)
         if kernel_d is None:
-            kernel_d  = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
+            kernel_d = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
         if kernel_lp is None:
             kernel_lp = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
 
         gplist_d = []
         #Create all GPs for d; one for each principle component
         for i in range(self.NPC_D):
-            ws = self.ws_d[i,:]
+            ws = self.ws_d[i, :]
             kd = copy.deepcopy(kernel_d)
             gp = george.GP(kernel=kd, fit_kernel=True, mean=np.mean(ws))
             gp.compute(self.parameters)
@@ -140,24 +140,24 @@ class CovEmu(object):
         gplist_l = []
         #Create all GPs for lprime; one for each principle component
         for i in range(self.NPC_L):
-            ws = self.ws_l[i,:]
+            ws = self.ws_l[i, :]
             kl = copy.deepcopy(kernel_lp)
             gp = george.GP(kernel=kl, fit_kernel=True, mean=np.mean(ws))
             gp.compute(self.parameters)
             gplist_l.append(gp)
             continue
-        self.gplist_d  = gplist_d
-        self.gplist_l  = gplist_l
+        self.gplist_d = gplist_d
+        self.gplist_l = gplist_l
         self.GPs_built = True
         return
 
     def train_emulator(self):
         if not self.GPs_built:
             raise Exception("Need to build before training.")
-        
+
         #Train the GPs for d
         for i, gp in enumerate(self.gplist_d):
-            ws = self.ws_d[i,:]
+            ws = self.ws_d[i, :]
             def nll(p):
                 gp.set_parameter_vector(p)
                 ll = gp.log_likelihood(ws, quiet=True)
@@ -171,7 +171,7 @@ class CovEmu(object):
             continue
         #Train the GPs for lprime
         for i, gp in enumerate(self.gplist_l):
-            ws = self.ws_l[i,:]
+            ws = self.ws_l[i, :]
             def nll(p):
                 gp.set_parameter_vector(p)
                 ll = gp.log_likelihood(ws, quiet=True)
@@ -198,20 +198,20 @@ class CovEmu(object):
             raise Exception("length of 'params' does not match training "+\
                             "parameters.")
         #Loop over d GPs and predict weights
-        wp_d = np.array([gp.predict(ws, params)[0] for ws,gp in zip(self.ws_d, self.gplist_d)])
-        wp_l = np.array([gp.predict(ws, params)[0] for ws,gp in zip(self.ws_l, self.gplist_l)])
+        wp_d = np.array([gp.predict(ws, params)[0] for ws, gp in zip(self.ws_d, self.gplist_d)])
+        wp_l = np.array([gp.predict(ws, params)[0] for ws, gp in zip(self.ws_l, self.gplist_l)])
         #Multiply by the PCs to get predicted ds and lprimes
-        d_pred  = wp_d[0]*self.phis_d[0]
+        d_pred = wp_d[0]*self.phis_d[0]
         lp_pred = wp_l[0]*self.phis_l[0]
-        
-        for i in range(1,self.NPC_D):
-            d_pred  += wp_d[i]*self.phis_d[i]
 
-        for i in range(1,self.NPC_L):
+        for i in range(1, self.NPC_D):
+            d_pred += wp_d[i]*self.phis_d[i]
+
+        for i in range(1, self.NPC_L):
             lp_pred += wp_l[i]*self.phis_l[i]
 
         #Multiply on the stddev and add on the mean
-        d_pred_raw  = d_pred *self.d_std + self.d_mean
+        d_pred_raw = d_pred *self.d_std + self.d_mean
         Lprime_pred = lp_pred*self.Lprime_std + self.Lprime_mean
         D_pred = np.exp(d_pred_raw)
         #Reconstruct the covariance through the breakdown tool
