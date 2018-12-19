@@ -6,6 +6,7 @@ def test_emulator_builds():
     params = np.arange(10)
     Cs = np.array([np.identity(2) for _ in params])
     Emu = ce.CovEmu(params, Cs)
+    assert Emu #builds
     return
 
 def test_emulator_attributes():
