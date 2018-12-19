@@ -1,10 +1,17 @@
 import numpy as np
-import george as gg
 import covariance_breakdown as cb
 import george
-from george.kernels import *
+from george.kernels import ExpSquaredKernel, Matern52Kernel, \
+    ExpKernel, RationalQuadraticKernel, Matern32Kernel
 import scipy.optimize as op
 import copy
+
+#Assert statements to guarantee the linter doesn't complain
+assert ExpSquaredKernel
+assert Matern52Kernel
+assert ExpKernel
+assert Matern32Kernel
+assert RationalQuadraticKernel
 
 class CovEmu(object):
     """
