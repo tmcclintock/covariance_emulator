@@ -10,7 +10,7 @@ def test_emulator_builds():
     return
 
 def test_emulator_attributes():
-    attrs = ["number_of_matrices", "matrix_size", "covariance_matrices",
+    attrs = ["matrix_size", "covariance_matrices",
              "parameters", "Npars","Ds","Lprimes","d_mean","d_std",
              "Lprime_mean","Lprime_std", "ds", "lps","ws_d","ws_l","phis_d",
              "phis_l","NPC_D","NPC_L","gplist_d","gplist_l"]

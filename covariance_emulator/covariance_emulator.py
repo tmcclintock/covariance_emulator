@@ -36,7 +36,6 @@ class CovEmu(object):
         #Save all attributes
         self.NPC_D = NPC_D
         self.NPC_L = NPC_L
-        self.number_of_matrices = len(Cs)
         self.matrix_size = len(Cs[0])
         self.covariance_matrices = Cs
         self.parameters = parameters
