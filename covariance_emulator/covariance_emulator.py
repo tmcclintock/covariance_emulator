@@ -67,7 +67,7 @@ class CovEmu(object):
         """
         Cs = self.covariance_matrices
         ND = self.matrix_size
-        Nc = self.number_of_matrices
+        Nc = len(self.covariance_matrices)
         NLp = int(ND*(ND-1)/2)
         Ds = np.zeros((Nc, ND))
         Lprimes = np.zeros((Nc, NLp))
@@ -122,6 +122,10 @@ class CovEmu(object):
         return
 
     def build_emulator(self, kernel_d=None, kernel_lp=None):
+        """
+        Build the emulator by creating Gaussian process regressors for each
+        principle component used for D and L.
+        """
         metric_guess = np.std(self.parameters, 0)
         if kernel_d is None:
             kernel_d = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
@@ -152,6 +156,10 @@ class CovEmu(object):
         return
 
     def train_emulator(self):
+        """
+        Train the emulator by optimizing each Gaussian process
+        on their respective training PCA weights.
+        """
         if not self.GPs_built:
             raise Exception("Need to build before training.")
 
@@ -187,6 +195,9 @@ class CovEmu(object):
         return
 
     def predict(self, params):
+        """
+        Predict the covariance matrix at a location in parameter space.
+        """
         if not self.trained:
             raise Exception("Need to train the emulator first.")
 
