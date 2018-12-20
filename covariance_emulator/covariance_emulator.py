@@ -36,7 +36,6 @@ class CovEmu(object):
         #Save all attributes
         self.NPC_D = NPC_D
         self.NPC_L = NPC_L
-        self.matrix_size = len(Cs[0])
         self.covariance_matrices = Cs
         self.parameters = parameters
         if parameters.ndim == 2:
@@ -65,7 +64,7 @@ class CovEmu(object):
             None
         """
         Cs = self.covariance_matrices
-        ND = self.matrix_size
+        ND = len(self.covariance_matrices[0])
         Nc = len(self.covariance_matrices)
         NLp = int(ND*(ND-1)/2)
         Ds = np.zeros((Nc, ND))
