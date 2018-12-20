@@ -14,7 +14,7 @@ python setup.py install
 ```
 You should then run the unit tests with
 ```
-python setup.py test
+pytest
 ```
 If any fail, please copy/paste their output into an issue.
 
