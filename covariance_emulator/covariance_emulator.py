@@ -206,6 +206,9 @@ class CovEmu(object):
         if len(params) != self.Npars:
             raise Exception("length of 'params' does not match training "+\
                             "parameters.")
+        #For higher dimensional trianing data, george requires a 2D array...
+        if len(params) > 1:
+            params = np.atleast_2d(params)
         #Loop over d GPs and predict weights
         wp_d = np.array([gp.predict(ws, params)[0] for ws, gp in zip(self.ws_d, self.gplist_d)])
         wp_l = np.array([gp.predict(ws, params)[0] for ws, gp in zip(self.ws_l, self.gplist_l)])
