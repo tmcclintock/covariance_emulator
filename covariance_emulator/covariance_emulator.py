@@ -17,7 +17,8 @@ class CovEmu(object):
     """
     Generalized emulator for covariance matrices.
     """
-    def __init__(self, parameters, covariance_matrices, NPC_D=1, NPC_L=1):
+    def __init__(self, parameters, covariance_matrices, NPC_D=1, NPC_L=1,
+                 kernel_D = None, kernel_lp = None):
         parameters = np.array(parameters)
         Cs = np.array(covariance_matrices)
         #Check dimensionality
@@ -43,6 +44,15 @@ class CovEmu(object):
         else:
             self.Npars = 1 #1 number per covariance matrix
 
+        #Create kernels for the emulator
+        metric_guess = np.std(self.parameters, 0)
+        if kernel_D is None:
+            kernel_D = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
+        if kernel_lp is None:
+            kernel_lp = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
+        self.kernel_D = kernel_D
+        self.kernel_lp = kernel_lp
+        
         #Call methods that start to build the emulator
         self.breakdown_matrices()
         self.create_training_data()
@@ -119,22 +129,18 @@ class CovEmu(object):
         self.phis_l = phis_l
         return
 
-    def build_emulator(self, kernel_d=None, kernel_lp=None):
+    def build_emulator(self):
         """
         Build the emulator by creating Gaussian process regressors for each
         principle component used for D and L.
         """
-        metric_guess = np.std(self.parameters, 0)
-        if kernel_d is None:
-            kernel_d = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
-        if kernel_lp is None:
-            kernel_lp = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
-
+        kernel_D = self.kernel_D
+        kernel_lp = self.kernel_lp
         gplist_d = []
         #Create all GPs for d; one for each principle component
         for i in range(self.NPC_D):
             ws = self.ws_d[i, :]
-            kd = copy.deepcopy(kernel_d)
+            kd = copy.deepcopy(kernel_D)
             gp = george.GP(kernel=kd, fit_kernel=True, mean=np.mean(ws))
             gp.compute(self.parameters)
             gplist_d.append(gp)
