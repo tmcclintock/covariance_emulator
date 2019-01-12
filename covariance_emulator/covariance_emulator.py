@@ -47,9 +47,11 @@ class CovEmu(object):
         #Create kernels for the emulator
         metric_guess = np.std(self.parameters, 0)
         if kernel_D is None:
-            kernel_D = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
+            kernel_D = 1.*ExpSquaredKernel(metric=metric_guess,
+                                           ndim=self.Npars)
         if kernel_lp is None:
-            kernel_lp = 1.*ExpSquaredKernel(metric_guess, ndim=self.Npars)
+            kernel_lp = 1.*ExpSquaredKernel(metric=metric_guess,
+                                            ndim=self.Npars)
         self.kernel_D = kernel_D
         self.kernel_lp = kernel_lp
         
