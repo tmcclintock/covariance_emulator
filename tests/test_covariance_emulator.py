@@ -10,16 +10,29 @@ def test_emulator_builds():
     return
 
 def test_emulator_attributes():
-    attrs = ["covariance_matrices",
-             "parameters", "Npars","Ds","Lprimes","d_mean","d_std",
-             "Lprime_mean","Lprime_std", "ds", "lps","ws_d","ws_l","phis_d",
-             "phis_l","NPC_D","NPC_L","gplist_d","gplist_l"]
+    attrs = ["covariance_matrices", "parameters", "Npars", "Ds", "Lprimes", "d_mean", "d_std", "Lprime_mean", "Lprime_std", "ds", "lps", "ws_d", "ws_l", "phis_d", "phis_l", "NPC_D", "NPC_L", "gplist_d", "gplist_l", "kernel_D", "kernel_lp"]
     params = np.arange(1,10)
     Cs = np.array([p*np.identity(2) for p in params])
     Emu = ce.CovEmu(params, Cs)
     for attr in attrs:
         npt.assert_equal(hasattr(Emu, attr), True, err_msg="attribute %s not present"%attr)
     return
+
+def test_emulator_predicts():
+    params = np.arange(1,10)
+    Cs = np.array([p*np.identity(2) for p in params])
+    Emu = ce.CovEmu(params, Cs)
+    Cp = Emu.predict(4.5)
+    assert Cp is not None
+
+    pars2 = np.array([params, params]).T
+    Cs = np.array([p*np.identity(2) for p in params])
+    Emu = ce.CovEmu(pars2, Cs)
+    Cp = Emu.predict([4.5, 4.5])
+    assert Cp is not None
+
+    return
+
 
 def test_emulator_exceptions():
     

@@ -203,6 +203,13 @@ class CovEmu(object):
     def predict(self, params):
         """
         Predict the covariance matrix at a location in parameter space.
+
+        Args:
+            params (float or array-like): parameters of the requested covariance
+
+        Returns:
+            (array-like): predicted covariance matix
+
         """
         if not self.trained:
             raise Exception("Need to train the emulator first.")
