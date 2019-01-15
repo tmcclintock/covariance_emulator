@@ -6,6 +6,8 @@ This tool is general, in that it can be used to construct emulators for any set 
 
 ## Installation
 
+**NOTE**: One requirement is not yet pip installable. You can easily download it from GitHub from [this repository](https://github.com/tmcclintock/covariance_breakdown).
+
 For now, the easiest way to install is to clone the repository and install with the `setup.py` script.
 ```
 git clone https://github.com/tmcclintock/covariance_emulator
