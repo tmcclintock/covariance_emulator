@@ -83,7 +83,7 @@ class CovEmu(object):
         Lprimes = np.zeros((Nc, NLp))
         #Loop over matrices and break them down
         for i in range(Nc):
-            b = cb.breakdown(Cs[i])
+            b = cb.breakdown(Cs[i], unravel_diagonally=True)
             Ds[i] = b.D
             Lprimes[i] = b.Lprime
             continue
@@ -242,5 +242,5 @@ class CovEmu(object):
         Lprime_pred = lp_pred*self.Lprime_std + self.Lprime_mean
         D_pred = np.exp(d_pred_raw)
         #Reconstruct the covariance through the breakdown tool
-        breakdown_predicted = cb.breakdown.from_D_Lprime(D_pred, Lprime_pred)
+        breakdown_predicted = cb.breakdown.from_D_Lprime(D_pred, Lprime_pred, unravel_diagonally = True)
         return breakdown_predicted.C
