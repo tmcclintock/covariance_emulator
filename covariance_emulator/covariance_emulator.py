@@ -168,7 +168,7 @@ class CovEmu(object):
         """
         if not self.GPs_built:
             raise Exception("Need to build before training.")
-
+        method = "SLSQP"
         #Train the GPs for d
         for i, gp in enumerate(self.gplist_d):
             ws = self.ws_d[i, :]
@@ -180,7 +180,7 @@ class CovEmu(object):
                 gp.set_parameter_vector(p)
                 return -gp.grad_log_likelihood(ws, quiet=True)
             p0 = gp.get_parameter_vector()
-            result = op.minimize(nll, p0, jac=grad_nll)
+            result = op.minimize(nll, p0, jac=grad_nll, method=method)
             gp.set_parameter_vector(result.x)
             continue
         #Train the GPs for lprime
@@ -194,7 +194,7 @@ class CovEmu(object):
                 gp.set_parameter_vector(p)
                 return -gp.grad_log_likelihood(ws, quiet=True)
             p0 = gp.get_parameter_vector()
-            result = op.minimize(nll, p0, jac=grad_nll)
+            result = op.minimize(nll, p0, jac=grad_nll, method=method)
             gp.set_parameter_vector(result.x)
             continue
         self.trained = True
