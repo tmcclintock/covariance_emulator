@@ -92,14 +92,14 @@ class CovEmu(object):
         self.ds_raw = np.log(Ds)
         self.Lprimes = Lprimes
         #Compute their first statistical moments
-        self.d_mean = np.mean(self.ds_raw)
-        self.d_std = np.std(self.ds_raw)
-        self.Lprime_mean = np.mean(Lprimes)
-        self.Lprime_std = np.std(Lprimes)
+        self.d_mean = np.mean(self.ds_raw, 0)
+        self.d_std = np.std(self.ds_raw, 0)
+        self.Lprime_mean = np.mean(Lprimes, 0)
+        self.Lprime_std = np.std(Lprimes, 0)
         #If any standard deviations are 0, set them to 1
-        if self.d_std == 0:
+        if any(self.d_std == 0):
             self.d_std = 1
-        if self.Lprime_std == 0:
+        if any(self.Lprime_std == 0):
             self.Lprime_std = 1
         return
 
