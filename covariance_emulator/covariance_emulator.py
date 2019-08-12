@@ -1,6 +1,6 @@
 import copy
 import numpy as np
-import covariance_breakdown as cb
+import breakdown as cb
 import george
 from george.kernels import ExpSquaredKernel, Matern52Kernel, \
     ExpKernel, RationalQuadraticKernel, Matern32Kernel
