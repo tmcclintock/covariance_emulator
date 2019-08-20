@@ -1,6 +1,6 @@
 import copy
 import numpy as np
-import breakdown as cb
+import covariance_emulator.breakdown as cb
 import george
 from george.kernels import ExpSquaredKernel, Matern52Kernel, \
     ExpKernel, RationalQuadraticKernel, Matern32Kernel
@@ -116,7 +116,6 @@ class CovEmu(object):
         #Perform PCA to create weights and principle components
         def compute_ws_and_phis(A, Npc):
             u, s, v = np.linalg.svd(A, 0) #Do the PCA
-            print(u.shape, s.shape, v.shape, A.shape)
             s = np.diag(s)
             N = len(s)
             P = np.dot(v.T, s)/np.sqrt(N)
