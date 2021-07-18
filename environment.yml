@@ -1,0 +1,14 @@
+name: covemu
+dependencies:
+  - python>=3.6
+  - twine
+  - numpy
+  - scipy
+  - matplotlib
+  - isort
+  - black
+  - flake8
+  - pre-commit
+  - pytest
+  - coverage
+  - george
