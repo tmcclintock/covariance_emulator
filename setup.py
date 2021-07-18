@@ -13,7 +13,6 @@ dist = setup(
     name="covariance_emulator",
     author="Thomas McClintock",
     author_email="thmsmcclintock@gmail.com",
-    description="Framework for emulating covariance matrices.",
     license="MIT",
     url="https://github.com/tmcclintock/covariance_emulator",
     packages=["covariance_emulator"],
