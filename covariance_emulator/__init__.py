@@ -6,7 +6,8 @@ training points in that domain space.
 
 """
 from .covariance_emulator import CovEmu
-assert CovEmu #A hack to get pyflakes to not complain
+
+assert CovEmu  # A hack to get pyflakes to not complain
 
 __version__ = "0.1.0"
 __author__ = "Thomas McClintock"
