@@ -11,4 +11,5 @@ assert CovEmu  # A hack to get pyflakes to not complain
 
 __version__ = "0.1.0"
 __author__ = "Thomas McClintock"
-__email__ = "mcclintock@bnl.gov"
+__email__ = "thmsmcclintock@gmail.com"
+__docs__ = "Emulate parameter dependent covariance matrices."
