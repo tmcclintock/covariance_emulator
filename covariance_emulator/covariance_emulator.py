@@ -48,16 +48,12 @@ class CovEmu(object):
 
         # Create kernels for the emulator
         metric_guess = np.std(self.parameters, 0)
-        if kernel_D is None:
-            kernel_D = 1.0 * ExpSquaredKernel(
-                metric=metric_guess, ndim=self.Npars
-            )
-        if kernel_lp is None:
-            kernel_lp = 1.0 * ExpSquaredKernel(
-                metric=metric_guess, ndim=self.Npars
-            )
-        self.kernel_D = kernel_D
-        self.kernel_lp = kernel_lp
+        self.kernel_D = kernel_D or 1.0 * ExpSquaredKernel(
+            metric=metric_guess, ndim=self.Npars
+        )
+        self.kernel_lp = kernel_lp or 1.0 * ExpSquaredKernel(
+            metric=metric_guess, ndim=self.Npars
+        )
 
         # Call methods that start to build the emulator
         self.breakdown_matrices()
@@ -81,12 +77,11 @@ class CovEmu(object):
         """
         Cs = self.covariance_matrices
         ND = len(self.covariance_matrices[0])
-        Nc = len(self.covariance_matrices)
         NLp = int(ND * (ND - 1) / 2)
-        Ds = np.zeros((Nc, ND))
-        Lprimes = np.zeros((Nc, NLp))
+        Ds = np.zeros((self.N, ND))
+        Lprimes = np.zeros((self.N, NLp))
         # Loop over matrices and break them down
-        for i in range(Nc):
+        for i in range(self.N):
             breakdown = breakdown_covariance(Cs[i])
             Ds[i] = breakdown["D"]
             Lprimes[i] = breakdown["Lprime"]
