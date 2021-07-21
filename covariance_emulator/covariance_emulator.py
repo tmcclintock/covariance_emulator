@@ -1,24 +1,19 @@
+"""
+``CovEmu`` is an emulator for covariance matrices
+(or any set of real-symmetric matrices).
+"""
+
 import copy
 
 import george
 import numpy as np
 import scipy.optimize as op
-from george.kernels import (
-    ExpKernel,
-    ExpSquaredKernel,
-    Matern32Kernel,
-    Matern52Kernel,
-    RationalQuadraticKernel,
+from george.kernels import ExpSquaredKernel
+
+from covariance_emulator.breakdown import (
+    breakdown_covariance,
+    breakdown_covariance_from_components,
 )
-
-import covariance_emulator.breakdown as cb
-
-# Assert statements to guarantee the linter doesn't complain
-assert ExpSquaredKernel
-assert Matern52Kernel
-assert ExpKernel
-assert Matern32Kernel
-assert RationalQuadraticKernel
 
 
 class CovEmu(object):
@@ -103,9 +98,9 @@ class CovEmu(object):
         Lprimes = np.zeros((Nc, NLp))
         # Loop over matrices and break them down
         for i in range(Nc):
-            b = cb.breakdown(Cs[i], unravel_diagonally=True)
-            Ds[i] = b.D
-            Lprimes[i] = b.Lprime
+            breakdown = breakdown_covariance(Cs[i])
+            Ds[i] = breakdown["D"]
+            Lprimes[i] = breakdown["Lprime"]
             continue
         # Save the broken down data
         self.Ds = Ds
@@ -283,7 +278,7 @@ class CovEmu(object):
         Lprime_pred = lp_pred * self.Lprime_std + self.Lprime_mean
         D_pred = np.exp(d_pred_raw)
         # Reconstruct the covariance through the breakdown tool
-        breakdown_predicted = cb.breakdown.from_D_Lprime(
-            D_pred, Lprime_pred, unravel_diagonally=True
+        breakdown_predicted = breakdown_covariance_from_components(
+            D_pred, Lprime_pred
         )
-        return breakdown_predicted.C
+        return breakdown_predicted["C"]
