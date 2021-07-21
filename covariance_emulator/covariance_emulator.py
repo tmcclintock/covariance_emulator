@@ -31,8 +31,9 @@ class CovEmu(object):
         kernel_lp=None,
     ):
         Cs = np.atleast_3d(covariance_matrices)
-        N = Cs.shape[0]
-        parameters = np.atleast_2d(parameters).reshape(N, -1)
+        self.N = Cs.shape[0]
+        parameters = np.atleast_2d(parameters).reshape(self.N, -1)
+        self.Npars = len(parameters[0])
         assert len(parameters) == len(Cs), f"{parameters.shape} vs {Cs.shape}"
         assert parameters.ndim == 2, parameters.ndim
         assert Cs.ndim == 3, Cs.ndim
@@ -44,10 +45,6 @@ class CovEmu(object):
         self.NPC_L = NPC_L
         self.covariance_matrices = Cs
         self.parameters = parameters
-        if parameters.ndim == 2:
-            self.Npars = len(self.parameters[0])
-        else:
-            self.Npars = 1  # 1 number per covariance matrix
 
         # Create kernels for the emulator
         metric_guess = np.std(self.parameters, 0)
