@@ -69,9 +69,6 @@ def test_emulator_exceptions():
     # Wrong number of parameters vs number of covariance matrices
     with npt.assert_raises(Exception):
         Emu = ce.CovEmu(params[:-1], Cs)
-    # Params is too high dimsensional
-    with npt.assert_raises(Exception):
-        Emu = ce.CovEmu(np.array([[params]]), Cs)
     # Covariance matrix list has wrong dimensionality (!=3)
     with npt.assert_raises(Exception):
         Emu = ce.CovEmu(params, [Cs])

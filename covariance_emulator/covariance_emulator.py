@@ -30,23 +30,15 @@ class CovEmu(object):
         kernel_D=None,
         kernel_lp=None,
     ):
-        parameters = np.array(parameters)
-        Cs = np.array(covariance_matrices)
-        # Check dimensionality
-        if len(parameters) != len(Cs):
-            raise Exception(
-                "Must supply a parameter (list) for each " + "covariance matrix."
-            )
-        if parameters.ndim > 2:
-            raise Exception("'parameters' must be either a 1D or 2D array.")
-        if Cs.ndim != 3:
-            raise Exception("Must supply a list of 2D covariance matrices.")
-        for i in range(0, len(Cs) - 1):
-            if Cs[i].shape != Cs[i + 1].shape:
-                raise Exception(
-                    "All covariances must have the " + "same dimensions."
-                )
-            continue
+        Cs = np.atleast_3d(covariance_matrices)
+        N = Cs.shape[0]
+        parameters = np.atleast_2d(parameters).reshape(N, -1)
+        assert len(parameters) == len(Cs), f"{parameters.shape} vs {Cs.shape}"
+        assert parameters.ndim == 2, parameters.ndim
+        assert Cs.ndim == 3, Cs.ndim
+        msg = "all covariances must have the same dimension"
+        assert all(len(C) == len(C[0]) for C in Cs), msg
+
         # Save all attributes
         self.NPC_D = NPC_D
         self.NPC_L = NPC_L
