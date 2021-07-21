@@ -3,7 +3,7 @@
 (or any set of real-symmetric matrices).
 """
 
-import copy
+from copy import deepcopy
 
 import george
 import numpy as np
@@ -143,7 +143,7 @@ class CovEmu(object):
         # Create all GPs for d; one for each principle component
         for i in range(self.NPC_D):
             ws = self.ws_d[i, :]
-            kd = copy.deepcopy(kernel_D)
+            kd = deepcopy(kernel_D)
             gp = george.GP(kernel=kd, fit_kernel=True, mean=np.mean(ws))
             gp.compute(self.parameters)
             gplist_d.append(gp)
@@ -152,7 +152,7 @@ class CovEmu(object):
         # Create all GPs for lprime; one for each principle component
         for i in range(self.NPC_L):
             ws = self.ws_l[i, :]
-            kl = copy.deepcopy(kernel_lp)
+            kl = deepcopy(kernel_lp)
             gp = george.GP(kernel=kl, fit_kernel=True, mean=np.mean(ws))
             gp.compute(self.parameters)
             gplist_l.append(gp)
